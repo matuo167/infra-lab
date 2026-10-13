@@ -1,0 +1,19 @@
+{
+  "annotations": {"list": []},
+  "editable": false,
+  "graphTooltip": 1,
+  "panels": [
+    {"title": "リクエストレート", "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0}, "targets": [{"expr": "sum(rate(http_requests_total[5m]))", "legendFormat": "requests/sec"}]},
+    {"title": "エラー率", "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0}, "targets": [{"expr": "sum(rate(http_requests_total{status_code=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m]))", "legendFormat": "5xx ratio"}]},
+    {"title": "p95レイテンシ", "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}, "targets": [{"expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, path))", "legendFormat": "{{path}}"}]},
+    {"title": "HTTPリクエスト数", "type": "timeseries", "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}, "targets": [{"expr": "sum by (path, status_code) (rate(http_requests_total[5m]))", "legendFormat": "{{path}} {{status_code}}"}]}
+  ],
+  "schemaVersion": 39,
+  "style": "dark",
+  "tags": ["infra-lab"],
+  "templating": {"list": []},
+  "time": {"from": "now-6h", "to": "now"},
+  "title": "infra-lab overview",
+  "uid": "infra-lab-overview",
+  "version": 1
+}

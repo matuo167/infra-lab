@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ app_name }} | Task Board</title>
+    <link rel="stylesheet" href="/static/style.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">INFRASTRUCTURE LAB</p>
+          <h1>Task Board</h1>
+          <p class="lede">FastAPI と PostgreSQL で動く、運用を意識したタスク管理サービス。</p>
+        </div>
+        <a class="api-link" href="/docs" target="_blank" rel="noreferrer">API Docs ↗</a>
+      </header>
+
+      <section class="panel form-panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">NEW TASK</p>
+            <h2>タスクを追加</h2>
+          </div>
+          <span id="form-message" class="form-message" role="status"></span>
+        </div>
+        <form id="task-form">
+          <label>タイトル<input id="title" name="title" required maxlength="120" placeholder="例：Terraformの設計を見直す"></label>
+          <label>説明<textarea id="description" name="description" maxlength="2000" placeholder="背景や完了条件をメモ"></textarea></label>
+          <div class="form-grid">
+            <label>ステータス<select id="status" name="status"><option value="todo">未着手</option><option value="in_progress">進行中</option><option value="done">完了</option></select></label>
+            <label>優先度<select id="priority" name="priority"><option value="low">低</option><option value="medium" selected>中</option><option value="high">高</option></select></label>
+            <label>期限<input id="due_date" name="due_date" type="date"></label>
+          </div>
+          <button class="primary" type="submit">タスクを作成</button>
+        </form>
+      </section>
+
+      <section class="panel list-panel">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">WORKSPACE</p>
+            <h2>タスク一覧 <span id="task-count" class="count">0</span></h2>
+          </div>
+          <div class="filters">
+            <select id="filter-status" aria-label="ステータスで絞り込み"><option value="">すべて</option><option value="todo">未着手</option><option value="in_progress">進行中</option><option value="done">完了</option></select>
+            <select id="sort-by" aria-label="並び替え"><option value="created_at">作成日順</option><option value="due_date">期限順</option><option value="priority">優先度順</option></select>
+          </div>
+        </div>
+        <div id="task-list" class="task-list"><p class="empty">読み込み中...</p></div>
+      </section>
+    </main>
+    <script src="/static/app.js" defer></script>
+  </body>
+</html>

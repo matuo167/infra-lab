@@ -1,0 +1,49 @@
+name: Deploy AWS (manual and explicitly enabled)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    # The repository variable is an intentional second safety switch. It is not
+    # set in the published repository, so this workflow starts disabled.
+    if: github.event_name == 'workflow_dispatch' && vars.AWS_DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+      ECS_CLUSTER: ${{ vars.ECS_CLUSTER }}
+      ECS_SERVICE: ${{ vars.ECS_SERVICE }}
+      IMAGE_TAG: ${{ github.sha }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          role-session-name: infra-lab-${{ github.run_id }}
+      - id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+      - name: Build and push immutable image
+        id: image
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          docker build -f docker/Dockerfile -t "${REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}" .
+          docker push "${REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}"
+          echo "uri=${REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+      - name: Render task definition and deploy ECS service
+        run: |
+          aws ecs describe-task-definition --task-definition "$ECS_SERVICE" \
+            --query taskDefinition > task-definition.json
+          jq --arg image "${{ steps.image.outputs.uri }}" '.containerDefinitions[0].image = $image | del(.taskDefinitionArn, .revision, .status, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)' task-definition.json > rendered-task-definition.json
+          task_definition_arn=$(aws ecs register-task-definition --cli-input-json file://rendered-task-definition.json --query 'taskDefinition.taskDefinitionArn' --output text)
+          aws ecs update-service --cluster "$ECS_CLUSTER" --service "$ECS_SERVICE" --task-definition "$task_definition_arn" --force-new-deployment
+          aws ecs wait services-stable --cluster "$ECS_CLUSTER" --services "$ECS_SERVICE"
+      - name: Verify service health
+        run: echo "Verify the HTTPS ALB endpoint from the production environment after deployment."
