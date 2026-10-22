@@ -1,6 +1,6 @@
 # infra-lab
 
-FastAPI、PostgreSQL、Docker、Terraform、GitHub Actions、Prometheus/Grafanaを組み合わせた、就職活動向けのインフラ・SREポートフォリオです。
+FastAPI、PostgreSQL、Docker、Terraform、GitHub Actions、Prometheus/Grafanaを組み合わせた、インフラ・SREポートフォリオ
 
 ## プロジェクト概要
 
